@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4434DF5B240430CB0086799B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4434DF5A240430CB0086799B /* main.swift */; };
 		4434DF62240431790086799B /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4434DF61240431790086799B /* Endpoint.swift */; };
 		4434DF642404331F0086799B /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4434DF632404331F0086799B /* Client.swift */; };
+		4434DF672405AB990086799B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4434DF5A240430CB0086799B /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -127,8 +127,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				4434DF62240431790086799B /* Endpoint.swift in Sources */,
-				4434DF5B240430CB0086799B /* main.swift in Sources */,
 				4434DF642404331F0086799B /* Client.swift in Sources */,
+				4434DF672405AB990086799B /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

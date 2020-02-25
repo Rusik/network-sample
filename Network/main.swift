@@ -8,157 +8,191 @@
 
 import Foundation
 
-struct Menu: Decodable {}
-struct Cart: Decodable {}
-
-func getMenu() -> Endpoint<Menu> {
-    return Endpoint(method: .get, path: "/menu")
-}
-
-enum Endpoints {
-
-// ⚠️ Not compile
-//    case getMenu
-//    case addToCard(id: String)
-//
-//    func endpoint<R>() -> Endpoint<R> { // AnyEndpoint needs here
-//        switch self {
-//        case .getMenu:
-//            return Endpoint<Menu>(method: .get, path: "/menu")
-//        case .addToCard(let id):
-//            return Endpoint<Void>(method: .post, path: "/cart", parameters: ["id": id])
-//        }
-//    }
-
-    static func getMenu() -> Endpoint<Menu> {
-        Endpoint(method: .get, path: "/menu")
-    }
-
-    static func addToCard(id: String) -> Endpoint<Void> {
-         Endpoint(method: .post, path: "/cart", parameters: ["id": id])
-    }
-
-    static func getCart() -> JsonEndpoint<Cart> {
-
-        // Option 1
-        // Create and assign custom decoder
-        let decoder1 = JSONDecoder()
-        decoder1.dateDecodingStrategy = .iso8601
-        let endpoint1 = JsonEndpoint<Cart>(method: .get, path: "/cart", decoder: decoder1)
-
-        // Option 2
-        // Customize default decoder
-        let endpoint2 = JsonEndpoint<Cart>(method: .get, path: "/cart")
-        endpoint2.decoder.dateDecodingStrategy = .iso8601
-
-        // Option 3
-        // Get customized decoder from global static function
-        _ = JsonEndpoint<Cart>(method: .get, path: "/cart", decoder: jsonDecoder())
-
-        // Option 4
-        // Function wrapper that creates json enpoints with customized decoder
-        _ = jsonEndpoint(raw: Endpoint<Cart>(method: .get, path: "/cart"))
-
-        // Option 5
-        //
-        _ = JsonEndpoint_(raw: Endpoint<Cart>(method: .get, path: "/cart"), decoder: jsonDecoder())
-
-        // Option 6
-        //
-        _ = Endpoint<Cart>(method: .get, path: "/cart").jsonEndpoint()
-
-        // Option 7
-        //
-        _ = Endpoint<Cart>(method: .get, path: "/cart").withJsonDecoder(jsonDecoder())
-
-        // Option 8
-        //
-        _ = Endpoint<Cart>(method: .get, path: "/cart", parameters: nil, decode: jsonDecoderr())
-
-        // Option 9
-        //
-        _ = Endpoint<Cart>(method: .get, path: "/cart", parameters: nil) {
-            try jsonDecoder().decode(Cart.self, from: $0)
-        }
-
-
-        return endpoint1
-    }
-
-    private static func jsonEndpoint<R: Decodable>(raw: Endpoint<R>) -> Endpoint<R> {
-        Endpoint(method: raw.method, path: raw.path, parameters: raw.parameters) {
-            try jsonDecoder().decode(R.self, from: $0)
-        }
-    }
-
-    private static func jsonDecoder() -> JSONDecoder {
+protocol JSONDecoderProvider {}
+extension JSONDecoderProvider {
+    func jsonDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return decoder
     }
 
-    private static func jsonDecoderr<Response: Decodable>() -> (Data) throws -> Response {
-        return {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode(Response.self, from: $0)
+    func createEndpoint<Response: Decodable>(
+        method: Method,
+        path: String,
+        parameters: Parameters? = nil) -> Endpoint<Response>
+    {
+        return Endpoint(
+            method: method,
+            path: path,
+            parameters: parameters,
+            decoder: jsonDecoder())
+    }
+}
+
+class MenuService: JSONDecoderProvider {
+
+    struct Menu: Decodable {}
+
+    // DI
+    let client = Client(baseURL: URL(string: "")!)
+    let jsonDecoder: JSONDecoder = JSONDecoder()
+
+    func getMenu() {
+        var endpoint: Endpoint<Menu>
+        // Создаём явно в теле функции
+        endpoint = Endpoint(method: .get, path: "/menu", decoder: JSONDecoder())
+        // Берём из инджекнутого проперти
+        endpoint = Endpoint(method: .get, path: "/menu", decoder: self.jsonDecoder)
+        // Берём из протокола JSONDecoderProvider
+        endpoint = Endpoint(method: .get, path: "/menu", decoder: self.jsonDecoder())
+        // Создаём через хэлпер из протокола JSONDecoderProvider
+        endpoint = createEndpoint(method: .get, path: "/menu")
+
+        client.request(endpoint) {
+            let menu = try! $0.get()
+            print(menu)
+        }
+    }
+
+    func postOrder() {
+        client.request(Endpoint(method: .post, path: "/order")) { _ in
+            // Done
         }
     }
 }
 
-extension Endpoint where Response: Decodable {
-    func jsonEndpoint() -> Endpoint<Response> {
-        Endpoint(method: method, path: path, parameters: parameters) {
-            try JSONDecoder().decode(Response.self, from: $0)
-        }
+protocol JSONDecoderProvider_Static {}
+extension JSONDecoderProvider_Static {
+    static func jsonDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
     }
 }
 
-class MenuService {
-    private let apiClient = Client(baseURL: URL(string: "")!)
+class ProfileService: JSONDecoderProvider_Static {
+    let client = Client(baseURL: URL(string: "")!)
+    let jsonDecoder = JSONDecoder()
 
-    enum Endpoints {
-        static func getMenu() -> Endpoint<Menu> {
-            Endpoint(method: .get, path: "/menu")
+    struct Profile: Decodable {
+        typealias Id = Int
+    }
+    struct Orders: Decodable {}
+
+    // Option 1
+    private enum Endpoints_staticFunctions {
+        static func getProfile(id: Profile.Id) -> Endpoint<Profile> {
+            Endpoint(method: .get, path: "/profile", parameters: ["id": id], decoder: jsonDecoder())
         }
-        static func getCart() -> Endpoint<Cart> {
-            Endpoint(method: .get, path: "/cart")
+        static func createOrder() -> Endpoint<Orders> {
+            Endpoint(method: .post, path: "/orders", decoder: jsonDecoder())
         }
     }
 
-    func getMenu(completion: @escaping (Menu?) -> Void) {
-        apiClient.request(Endpoints.getMenu()) { result in
-            completion(try? result.get())
+    // Option 2
+    private enum Endpoints_var {
+// Can't do
+//        static var getProfile: Endpoint<Profile> {
+//            Endpoint(method: .get, path: "/profile", decoder: jsonDecoder())
+//        }
+        static var createOrder: Endpoint<Orders> {
+            Endpoint(method: .get, path: "/orders", decoder: jsonDecoder())
         }
     }
 
-    func getCart(completion: @escaping (Cart?) -> Void) {
-        apiClient.request(Endpoints.getCart()) { result in
-            completion(try? result.get())
-        }
+    // Option 3
+// Can't do
+//    private let profileEndpoint = Endpoint<Profile>(method: .get, path: "/profile", decoder: jsonDecoder())
+    private let ordersEndpoint = Endpoint<Orders>(method: .get, path: "/orders", decoder: jsonDecoder())
+
+    // Option 4
+    static func getProfile(id: Profile.Id) -> Endpoint<Profile> {
+        Endpoint(method: .get, path: "/profile", parameters: ["id": id], decoder: jsonDecoder())
     }
+    // Option 5
+    func getProfile(id: Profile.Id) -> Endpoint<Profile> {
+        Endpoint(method: .get, path: "/profile", parameters: ["id": id], decoder: jsonDecoder)
+    }
+
+    // ----
+
+    func getProfile_withEndpoints(id: Profile.Id) {
+        self.client.request(Endpoints_staticFunctions.getProfile(id: id)) {
+            let profile = try! $0.get()
+            print(profile)
+        }
+//        self.client.request(Endpoints_var.getProfile) {
+//            let profile = try! $0.get()
+//            print(profile)
+//        }
+        self.client.request(getProfile(id: id), completion: { _ in })
+        self.client.request(Self.getProfile(id: id), completion: { _ in })
+    }
+
+    func getProfile_inline(id: Profile.Id) {
+        let endpoint = Endpoint<Profile>(method: .get, path: "/profile", parameters: ["id": id], decoder: Self.jsonDecoder())
+        self.client.request(endpoint) {
+            let profile = try! $0.get()
+            print(profile)
+        }
+
+        // Как тут указать тип респонса?
+        // self.client.get(path: "/profile", params: ["id": id]) { result in
+        //     ???
+        // }
+        // Так?
+        // self.client.get<Profile>(path: "/profile", params: ["id": id])
+
+//        self.client.request(self.profileEndpoint) {
+//            let profile = try! $0.get()
+//            print(profile)
+//        }
+    }
+
 }
+
+//MARK: - Main
 
 func main() {
-
-    let baseUrl = URL(string: "")!
-    let client = Client(baseURL: baseUrl)
-
-    client.request(getMenu()) { result in
-        let menu: Menu = try! result.get()
-        print(menu)
-    }
-
-    client.request(Endpoints.addToCard(id: "123")) { result in
-        switch result {
-        case .success: ()
-            // success
-        case .failure: ()
-            // failure
-        }
-    }
+    MenuService().getMenu()
 }
 
 main()
 
+//MARK: - Main 2
+class Cllient {
+    func get<Response>(path: String, decode: (Data) -> Response, completion: (Response) -> Void) {
+        completion(decode(Data()))
+    }
+    func get<Response: Decodable>(path: String, decoder: JSONDecoder, completion: (Response) -> Void) {
+        completion(try! decoder.decode(Response.self, from: Data()))
+    }
+}
+
+class Seervice {
+    let client = Cllient()
+
+    struct Menu: Decodable {}
+
+    // 3. С другой стороны внутри сервиса тип Menu неявно выводится из объявления функции getMenu
+    func getMenu(completion: (Menu) -> Void) {
+        self.client.get(path: "/menu", decoder: JSONDecoder(), completion: completion)
+    }
+}
+
+func main2() {
+    // 1. Не очень удобно записывать что мы получаем в виде респонса
+    Cllient().get(path: "", decoder: JSONDecoder()) { (menu: ProfileService.Profile) in
+        print(menu)
+    }
+
+    // 2. Потому что так не компилируется
+//    Cllient().get<ProfileService.Profile>(path: "", decoder: JSONDecoder()) {
+//        print(menu)
+//    }
+}
+
+main2()
+
+//MARK: - RunLoop
 RunLoop.main.run()
