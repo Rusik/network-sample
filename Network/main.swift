@@ -1,198 +1,185 @@
-//
-//  main.swift
-//  Network
-//
-//  Created by Ruslan Kavetsky on 24.02.2020.
-//  Copyright © 2020 Ruslan Kavetsky. All rights reserved.
-//
-
 import Foundation
+import Alamofire
 
-protocol JSONDecoderProvider {}
-extension JSONDecoderProvider {
-    func jsonDecoder() -> JSONDecoder {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }
+//let baseUrl = "https://postb.in/1583084070077-2660918331239"
+let baseUrl = "https://postb.in/1583138944044-2034885881002"
+//let baseUrl = "https://postb.in/1583138180711-1321108536794"
+foo4()
 
-    func createEndpoint<Response: Decodable>(
-        method: Method,
-        path: String,
-        parameters: Parameters? = nil) -> Endpoint<Response>
-    {
-        return Endpoint(
-            method: method,
-            path: path,
-            parameters: parameters,
-            decoder: jsonDecoder())
-    }
-}
+//struct Params: Codable {
+//    let hello: String
+//}
 
-class MenuService: JSONDecoderProvider {
-
-    struct Menu: Decodable {}
-
-    // DI
-    let client = Client(baseURL: URL(string: "")!)
-    let jsonDecoder: JSONDecoder = JSONDecoder()
-
-    func getMenu() {
-        var endpoint: Endpoint<Menu>
-        // Создаём явно в теле функции
-        endpoint = Endpoint(method: .get, path: "/menu", decoder: JSONDecoder())
-        // Берём из инджекнутого проперти
-        endpoint = Endpoint(method: .get, path: "/menu", decoder: self.jsonDecoder)
-        // Берём из протокола JSONDecoderProvider
-        endpoint = Endpoint(method: .get, path: "/menu", decoder: self.jsonDecoder())
-        // Создаём через хэлпер из протокола JSONDecoderProvider
-        endpoint = createEndpoint(method: .get, path: "/menu")
-
-        client.request(endpoint) {
-            let menu = try! $0.get()
-            print(menu)
-        }
-    }
-
-    func postOrder() {
-        client.request(Endpoint(method: .post, path: "/order")) { _ in
-            // Done
-        }
-    }
-}
-
-protocol JSONDecoderProvider_Static {}
-extension JSONDecoderProvider_Static {
-    static func jsonDecoder() -> JSONDecoder {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }
-}
-
-class ProfileService: JSONDecoderProvider_Static {
-    let client = Client(baseURL: URL(string: "")!)
-    let jsonDecoder = JSONDecoder()
-
-    struct Profile: Decodable {
-        typealias Id = Int
-    }
-    struct Orders: Decodable {}
-
-    // Option 1
-    private enum Endpoints_staticFunctions {
-        static func getProfile(id: Profile.Id) -> Endpoint<Profile> {
-            Endpoint(method: .get, path: "/profile", parameters: ["id": id], decoder: jsonDecoder())
-        }
-        static func createOrder() -> Endpoint<Orders> {
-            Endpoint(method: .post, path: "/orders", decoder: jsonDecoder())
-        }
-    }
-
-    // Option 2
-    private enum Endpoints_var {
-// Can't do
-//        static var getProfile: Endpoint<Profile> {
-//            Endpoint(method: .get, path: "/profile", decoder: jsonDecoder())
-//        }
-        static var createOrder: Endpoint<Orders> {
-            Endpoint(method: .get, path: "/orders", decoder: jsonDecoder())
-        }
-    }
-
-    // Option 3
-// Can't do
-//    private let profileEndpoint = Endpoint<Profile>(method: .get, path: "/profile", decoder: jsonDecoder())
-    private let ordersEndpoint = Endpoint<Orders>(method: .get, path: "/orders", decoder: jsonDecoder())
-
-    // Option 4
-    static func getProfile(id: Profile.Id) -> Endpoint<Profile> {
-        Endpoint(method: .get, path: "/profile", parameters: ["id": id], decoder: jsonDecoder())
-    }
-    // Option 5
-    func getProfile(id: Profile.Id) -> Endpoint<Profile> {
-        Endpoint(method: .get, path: "/profile", parameters: ["id": id], decoder: jsonDecoder)
-    }
-
-    // ----
-
-    func getProfile_withEndpoints(id: Profile.Id) {
-        self.client.request(Endpoints_staticFunctions.getProfile(id: id)) {
-            let profile = try! $0.get()
-            print(profile)
-        }
-//        self.client.request(Endpoints_var.getProfile) {
-//            let profile = try! $0.get()
-//            print(profile)
-//        }
-        self.client.request(getProfile(id: id), completion: { _ in })
-        self.client.request(Self.getProfile(id: id), completion: { _ in })
-    }
-
-    func getProfile_inline(id: Profile.Id) {
-        let endpoint = Endpoint<Profile>(method: .get, path: "/profile", parameters: ["id": id], decoder: Self.jsonDecoder())
-        self.client.request(endpoint) {
-            let profile = try! $0.get()
-            print(profile)
-        }
-
-        // Как тут указать тип респонса?
-        // self.client.get(path: "/profile", params: ["id": id]) { result in
-        //     ???
-        // }
-        // Так?
-        // self.client.get<Profile>(path: "/profile", params: ["id": id])
-
-//        self.client.request(self.profileEndpoint) {
-//            let profile = try! $0.get()
-//            print(profile)
-//        }
-    }
-
-}
-
-//MARK: - Main
-
-func main() {
-    MenuService().getMenu()
-}
-
-main()
-
-//MARK: - Main 2
-class Cllient {
-    func get<Response>(path: String, decode: (Data) -> Response, completion: (Response) -> Void) {
-        completion(decode(Data()))
-    }
-    func get<Response: Decodable>(path: String, decoder: JSONDecoder, completion: (Response) -> Void) {
-        completion(try! decoder.decode(Response.self, from: Data()))
-    }
-}
-
-class Seervice {
-    let client = Cllient()
-
-    struct Menu: Decodable {}
-
-    // 3. С другой стороны внутри сервиса тип Menu неявно выводится из объявления функции getMenu
-    func getMenu(completion: (Menu) -> Void) {
-        self.client.get(path: "/menu", decoder: JSONDecoder(), completion: completion)
-    }
-}
-
-func main2() {
-    // 1. Не очень удобно записывать что мы получаем в виде респонса
-    Cllient().get(path: "", decoder: JSONDecoder()) { (menu: ProfileService.Profile) in
-        print(menu)
-    }
-
-    // 2. Потому что так не компилируется
-//    Cllient().get<ProfileService.Profile>(path: "", decoder: JSONDecoder()) {
-//        print(menu)
+//let client = Client(baseURL: URL(string: baseUrl)!)
+//client.request(Endpoint<Void>(method: .get, path: "client", parameters: nil)) { result in
+//    switch result {
+//    case .success:
+//        print("Yo")
+//    case .failure(let error):
+//        print(error)
 //    }
+//}
+
+//final class AlamofireClient {
+//
+//    let baseUrl: String
+//    let jsonDecoder: JSONDecoder
+//    private let session: Session
+//
+//    init(baseUrl: String, jsonDecoder: JSONDecoder = JSONDecoder()) {
+//        self.baseUrl = baseUrl
+//        self.jsonDecoder = jsonDecoder
+//        self.session = Session.default
+//    }
+//
+//    func get<Response: Decodable>(
+//        path: String,
+//        parameters: [String: Any],
+//        completion: @escaping (Response?) -> Void)
+//    {
+//        let url = try! baseUrl.asURL().appendingPathComponent(path)
+//        let request = self.session.request(url, method: .get, parameters: parameters)
+//        self.response(request, completion: completion)
+//
+////        self.session
+////            .request(url, method: .get, parameters: parameters)
+////            .responseDecodable(of: Response.self, decoder: self.jsonDecoder) { response in
+////                completion(response.value)
+////        }
+//    }
+//
+//    func get<Response: Decodable, Parameters: Encodable>(
+//        path: String,
+//        parameters: Parameters,
+//        completion: @escaping (Response?) -> Void)
+//    {
+//        let url = try! baseUrl.asURL().appendingPathComponent(path)
+//        let request = self.session.request(url, method: .get, parameters: parameters)
+//        self.response(request, completion: completion)
+//
+////        self.session
+////            .request(url, method: .get, parameters: parameters)
+////            .responseDecodable(of: Response.self, decoder: self.jsonDecoder) { response in
+////                completion(response.value)
+////        }
+//    }
+//
+//    func post<Response: Decodable, Payload: Encodable>(
+//        path: String,
+//        payload: Payload,
+//        completion: @escaping (Response?) -> Void)
+//    {
+//        let url = try! baseUrl.asURL().appendingPathComponent(path)
+//        let request = self.session.request(url, method: .get, parameters: payload)
+//        self.response(request, completion: completion)
+//
+////        self.session
+////            .request(url, method: .get, parameters: payload)
+////            .responseDecodable(of: Response.self, decoder: self.jsonDecoder) { response in
+////                completion(response.value)
+////        }
+//    }
+//
+//    func post<Payload: Encodable>(
+//        path: String,
+//        payload: Payload,
+//        completion: @escaping () -> Void)
+//    {
+////        let url = try! baseUrl.asURL().appendingPathComponent(path)
+////        let request = self.session.request(url, method: .get, parameters: payload)
+////        request
+////        self.response(request) { (d: Void?) in
+////            completion()
+////        }
+//
+////        self.session
+////            .request(url, method: .get, parameters: payload)
+////            .responseDecodable(of: Response.self, decoder: self.jsonDecoder) { response in
+////                completion(response.value)
+////        }
+//    }
+//
+//    private func response<Response: Decodable>(_ request: DataRequest, completion: @escaping (Response?) -> Void) {
+//        request.responseDecodable(of: Response.self, decoder: self.jsonDecoder) { response in
+//            completion(response.value)
+//        }
+//    }
+//}
+
+struct Menu: Decodable {
+    let items: [String]
 }
 
-main2()
+//let client = AlamofireClient(baseUrl: "https://hookb.in/eKZREjD7KaFr9g86QG3R")
+//client.get(path: "111", parameters: ["asd": 11]) { (result: Result<Menu, AlamofireClient.NetworkError> ) in
+//    print(result)
+//}
 
-//MARK: - RunLoop
+struct Person: Encodable {
+    let name: String
+}
+
+//client.post(path: "222", payload: Person(name: "Ruslan")) { (d: Void?) in
+//    print(d)
+//}
+
+//JSONParameterEncoder
+
+//AF.request(baseUrl, method: .get, parameters: ["hello2": "world2"]).response {
+//    debugPrint($0)
+//}
+
+
+//AF.request(baseUrl, method: .get, parameters: Params(hello: "world")).response {
+//    debugPrint($0)
+//}
+
+//AF.request(baseUrl, method: .get, parameters: Params(hello: "world"), encoder: JSONParameterEncoder(), headers: nil, interceptor: nil).response { response in
+//    debugPrint($0)
+//}
+
+// protocol URLRequestConvertible
+// struct RequestConvertible: URLRequestConvertible
+// struct RequestEncodableConvertible<Parameters: Encodable>: URLRequestConvertible
+// struct ParameterlessRequestConvertible: URLRequestConvertible
+
+
+struct RequestConvertible2: URLRequestConvertible {
+    let url: URLConvertible
+    let method: HTTPMethod
+    let parameters: Parameters?
+    let encoding: ParameterEncoding
+    // func encode(_ urlRequest: URLRequestConvertible, with parameters: Parameters?) throws -> URLRequest
+    let headers: HTTPHeaders?
+
+    func asURLRequest() throws -> URLRequest {
+        let request = try URLRequest(url: url, method: method, headers: headers)
+        return try encoding.encode(request, with: parameters)
+    }
+}
+
+struct RequestEncodableConvertible2<Parameters: Encodable>: URLRequestConvertible {
+    let url: URLConvertible
+    let method: HTTPMethod
+    let parameters: Parameters?
+    let encoder: ParameterEncoder
+    // func encode<Parameters: Encodable>(_ parameters: Parameters?, into request: URLRequest) throws -> URLRequest
+    let headers: HTTPHeaders?
+
+    func asURLRequest() throws -> URLRequest {
+        let request = try URLRequest(url: url, method: method, headers: headers)
+        return try parameters.map { try encoder.encode($0, into: request) } ?? request
+    }
+}
+
+struct ParameterlessRequestConvertible2: URLRequestConvertible {
+    let url: URLConvertible
+    let method: HTTPMethod
+    let headers: HTTPHeaders?
+
+    func asURLRequest() throws -> URLRequest {
+        return try URLRequest(url: url, method: method, headers: headers)
+    }
+}
+
 RunLoop.main.run()

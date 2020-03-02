@@ -1,4 +1,5 @@
 import Foundation
+import Alamofire
 
 //typealias ResultCompletion<Value, Error> = (Result<Value, Error>) -> Void
 
@@ -11,7 +12,7 @@ protocol ClientProtocol {
     )
 }
 
-struct Client: ClientProtocol {
+final class Client: ClientProtocol {
 
     enum ClientError: Error {
         case parseError(Error)
@@ -29,8 +30,8 @@ struct Client: ClientProtocol {
         _ endpoint: Endpoint<Response>,
         completion: @escaping (Result<Response, ClientError>) -> Void)
      {
-        let url = URL(string: "https://ya.ru")!
-        URLSession.shared.dataTask(with: url) { (data, _, error) in
+
+        URLSession.shared.dataTask(with: self.baseURL.appendingPathComponent(endpoint.path)) { (data, _, error) in
             let result: Result<Response, ClientError>
             if let data = data {
                 do {
@@ -45,6 +46,6 @@ struct Client: ClientProtocol {
                 result = .failure(ClientError.unknown)
             }
             completion(result)
-        }
+        }.resume()
     }
 }

@@ -49,3 +49,15 @@ extension Endpoint where Response == Void {
         self.decode = { _ in }
     }
 }
+
+extension Endpoint where Response == Data {
+    init(method: Method,
+         path: String,
+         parameters: Parameters? = nil
+    ) {
+        self.method = method
+        self.path = path
+        self.parameters = parameters
+        self.decode = { $0 }
+    }
+}
