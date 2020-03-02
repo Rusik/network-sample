@@ -1,14 +1,16 @@
 import Foundation
 import Alamofire
 
-final class AlamofireClient4 {
+final class ApiClient {
 
     let baseUrl: String
     let jsonDecoder: JSONDecoder
     private let session: Session
 
-    enum NetworkError: Error {
-        case underlying(_ error: Error)
+    //MARK: - Types
+
+    enum Error: Swift.Error {
+        case underlying(_ error: Swift.Error)
         case unknownError
     }
 
@@ -24,34 +26,19 @@ final class AlamofireClient4 {
         }
     }
 
-    /*
-     Get запрос
-     Параметры: Словарь | Encodable | nil
-     Результат: Void | Decodable
-     */
+    typealias Completion<Response> = (Result<Response, Error>) -> Void
+
+    //MARK: - Init
 
     init(baseUrl: String, jsonDecoder: JSONDecoder = JSONDecoder()) {
         self.baseUrl = baseUrl
         self.jsonDecoder = jsonDecoder
         self.session = Session.default
+        // Убрал кэширования для корректного тестирования get запросов
         self.session.sessionConfiguration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
     }
 
     //MARK: - Get
-
-    typealias Completion<Response> = (Result<Response, NetworkError>) -> Void
-
-    func request<Response: Decodable>(
-        _ response: Response.Type,
-        method: Method,
-        path: String,
-        parameters: [String: Any],
-        completion: Completion<Response>?)
-    {
-        let url = try! baseUrl.asURL().appendingPathComponent(path)
-        let request = self.session.request(url, method: method.httpMethod, parameters: parameters)
-        self.response(request, completion: completion)
-    }
 
     func request<Parameters: Encodable, Response: Decodable>(
         _ response: Response.Type,
@@ -85,13 +72,10 @@ final class AlamofireClient4 {
         request.responseDecodable(of: Response.self, decoder: self.jsonDecoder) { response in
             if let value = response.value {
                 completion?(.success(value))
-                print(value)
             } else if let error = response.error?.underlyingError {
                 completion?(.failure(.underlying(error)))
-                print(error)
             } else {
                 completion?(.failure(.unknownError))
-                print("unknown")
             }
         }
     }
@@ -103,40 +87,11 @@ final class AlamofireClient4 {
         request.response() { response in
             if response.value != nil {
                 completion?(.success(()))
-                print("success")
             } else if let error = response.error?.underlyingError {
                 completion?(.failure(.underlying(error)))
-                print(error)
             } else {
                 completion?(.failure(.unknownError))
-                print("unknown")
             }
         }
     }
-}
-
-let client = AlamofireClient4(baseUrl: baseUrl)
-
-func foo4() {
-
-//    let client = AlamofireClient4(baseUrl: baseUrl)
-
-    struct Menu: Decodable {}
-    struct Payload: Encodable {
-        let id: Int
-    }
-
-//    AF.request(baseUrl).response {
-//        debugPrint($0)
-//    }
-
-//    client.request(Menu.self, method: .get, path: "menu", parameters: Payload(id: 1), completion: nil)
-//    client.request(Menu.self, method: .get, path: "menu", parameters: ["dict_id": 1], completion: nil)
-//    client.request(method: .get, path: "menu", parameters: ["dict_id_void": 1], completion: nil)
-//    client.request(method: .get, path: "menu", parameters: Payload(id: 1), completion: nil)
-//
-//    client.request(method: .post, path: "order", parameters: ["order_id": 1], completion: nil)
-//    client.request(method: .post, path: "order", parameters: Payload(id: 1), completion: nil)
-//    client.request(Menu.self, method: .post, path: "order", parameters: ["dict_id": 1], completion: nil)
-//    client.request(Menu.self, method: .post, path: "order", parameters: Payload(id: 1), completion: nil)
 }

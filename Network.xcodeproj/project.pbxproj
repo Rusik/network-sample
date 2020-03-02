@@ -7,16 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4434DF62240431790086799B /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4434DF61240431790086799B /* Endpoint.swift */; };
-		4434DF642404331F0086799B /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4434DF632404331F0086799B /* Client.swift */; };
 		44390672240BE6F600EDAF29 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 44390671240BE6F600EDAF29 /* Alamofire */; };
 		44935CFC240BE71E00173112 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44935CFB240BE71E00173112 /* main.swift */; };
-		44935CFE240C3C3900173112 /* AlamofireClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44935CFD240C3C3900173112 /* AlamofireClient.swift */; };
-		44935D00240C41A600173112 /* AlamofireClient2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44935CFF240C41A600173112 /* AlamofireClient2.swift */; };
-		44935D04240C513E00173112 /* AlamofireClient3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44935D03240C513D00173112 /* AlamofireClient3.swift */; };
-		44935D06240C610300173112 /* Expressible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44935D05240C610300173112 /* Expressible.swift */; };
-		44935D08240C64C900173112 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44935D07240C64C900173112 /* Encoding.swift */; };
-		44935D0A240CE57800173112 /* AlamofireClient4.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44935D09240CE57800173112 /* AlamofireClient4.swift */; };
+		44935D0A240CE57800173112 /* ApiClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44935D09240CE57800173112 /* ApiClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,16 +26,8 @@
 
 /* Begin PBXFileReference section */
 		4434DF57240430CB0086799B /* Network */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Network; sourceTree = BUILT_PRODUCTS_DIR; };
-		4434DF5A240430CB0086799B /* main3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main3.swift; sourceTree = "<group>"; };
-		4434DF61240431790086799B /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
-		4434DF632404331F0086799B /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
 		44935CFB240BE71E00173112 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		44935CFD240C3C3900173112 /* AlamofireClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlamofireClient.swift; sourceTree = "<group>"; };
-		44935CFF240C41A600173112 /* AlamofireClient2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlamofireClient2.swift; sourceTree = "<group>"; };
-		44935D03240C513D00173112 /* AlamofireClient3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlamofireClient3.swift; sourceTree = "<group>"; };
-		44935D05240C610300173112 /* Expressible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Expressible.swift; sourceTree = "<group>"; };
-		44935D07240C64C900173112 /* Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoding.swift; sourceTree = "<group>"; };
-		44935D09240CE57800173112 /* AlamofireClient4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlamofireClient4.swift; sourceTree = "<group>"; };
+		44935D09240CE57800173112 /* ApiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiClient.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,16 +61,8 @@
 		4434DF59240430CB0086799B /* Network */ = {
 			isa = PBXGroup;
 			children = (
-				4434DF5A240430CB0086799B /* main3.swift */,
 				44935CFB240BE71E00173112 /* main.swift */,
-				44935CFD240C3C3900173112 /* AlamofireClient.swift */,
-				44935CFF240C41A600173112 /* AlamofireClient2.swift */,
-				44935D03240C513D00173112 /* AlamofireClient3.swift */,
-				44935D09240CE57800173112 /* AlamofireClient4.swift */,
-				4434DF61240431790086799B /* Endpoint.swift */,
-				4434DF632404331F0086799B /* Client.swift */,
-				44935D05240C610300173112 /* Expressible.swift */,
-				44935D07240C64C900173112 /* Encoding.swift */,
+				44935D09240CE57800173112 /* ApiClient.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -154,15 +131,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				44935D08240C64C900173112 /* Encoding.swift in Sources */,
-				44935D04240C513E00173112 /* AlamofireClient3.swift in Sources */,
-				44935D06240C610300173112 /* Expressible.swift in Sources */,
 				44935CFC240BE71E00173112 /* main.swift in Sources */,
-				44935D0A240CE57800173112 /* AlamofireClient4.swift in Sources */,
-				44935D00240C41A600173112 /* AlamofireClient2.swift in Sources */,
-				4434DF62240431790086799B /* Endpoint.swift in Sources */,
-				4434DF642404331F0086799B /* Client.swift in Sources */,
-				44935CFE240C3C3900173112 /* AlamofireClient.swift in Sources */,
+				44935D0A240CE57800173112 /* ApiClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
